@@ -1,0 +1,94 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: hackathon-notification-mysql
+    environment:
+      MYSQL_DATABASE: hackathon_notification
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: hackathon
+      MYSQL_PASSWORD: hackathon
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: hackathon-notification-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    container_name: hackathon-notification-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: hackathon-notification-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hackathon-notification-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/hackathon_notification?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: hackathon
+      DB_PASSWORD: hackathon
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+      MAIL_HOST: mailhog
+      MAIL_PORT: 1025
+      EMAIL_ENGINE_FROM: no-reply@hackathon.local
+      EMAIL_ENGINE_TO_FALLBACK_DOMAIN: example.com
+      EMAIL_ENGINE_DEFAULT_RECIPIENT: dev@example.com
+      RABBITMQ_LISTENER_AUTO_STARTUP: "true"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  rabbitmq_data:
+  redis_data:
+  # redis mantido mas emailengine removido — substituído por mailhog

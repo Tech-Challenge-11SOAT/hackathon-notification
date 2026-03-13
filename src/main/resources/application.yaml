@@ -1,3 +1,54 @@
 spring:
   application:
     name: hackathon-notification
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/hackathon_notification?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        auto-startup: ${RABBITMQ_LISTENER_AUTO_STARTUP:true}
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: ${RABBITMQ_RETRY_MAX_ATTEMPTS:3}
+          initial-interval: ${RABBITMQ_RETRY_INITIAL_INTERVAL_MS:1000ms}
+          multiplier: ${RABBITMQ_RETRY_MULTIPLIER:2.0}
+          max-interval: ${RABBITMQ_RETRY_MAX_INTERVAL_MS:10000ms}
+
+app:
+  rabbit:
+    dlx: ${RABBITMQ_DLX:notification.dlx}
+    queues:
+      video-completed: ${VIDEO_COMPLETED_QUEUE:video.completed}
+      video-failed: ${VIDEO_FAILED_QUEUE:video.failed}
+  email-engine:
+    from: ${EMAIL_ENGINE_FROM:no-reply@hackathon.local}
+    to-fallback-domain: ${EMAIL_ENGINE_TO_FALLBACK_DOMAIN:example.com}
+    default-recipient: ${EMAIL_ENGINE_DEFAULT_RECIPIENT:}
