@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:notificationdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: none
+  flyway:
+    enabled: true
+  mail:
+    host: localhost
+    port: 1025
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000ms
+          multiplier: 2.0
+          max-interval: 10000ms
+
+app:
+  rabbit:
+    dlx: notification.dlx
+    queues:
+      video-completed: video.completed
+      video-failed: video.failed
+  email-engine:
+    from: no-reply@hackathon.local
+    to-fallback-domain: example.com
+    base-url: http://localhost:3000
+    account: default
+    from: no-reply@hackathon.local
+    to-fallback-domain: example.com
