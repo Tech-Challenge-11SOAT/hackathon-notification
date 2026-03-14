@@ -52,3 +52,19 @@ app:
     from: ${EMAIL_ENGINE_FROM:no-reply@hackathon.local}
     to-fallback-domain: ${EMAIL_ENGINE_TO_FALLBACK_DOMAIN:example.com}
     default-recipient: ${EMAIL_ENGINE_DEFAULT_RECIPIENT:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
